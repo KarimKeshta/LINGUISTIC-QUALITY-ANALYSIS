@@ -1,0 +1,6 @@
+Künstliche Intelligenz hat in den letzten Jahren stark an Bedeutung gewonnen. 
+Insbesondere generative KI-Systeme werden zunehmend eingesetzt, um Texte zu erstellen und zu überarbeiten.
+
+Die Verwendung solcher Systeme bietet verschiedene Vorteile. Sie können beispielsweise dabei helfen, Texte schneller zu erstellen und große Mengen an Informationen zusammenzufassen. Gleichzeitig besteht jedoch die Gefahr, dass die erzeugten Texte unnatürlich wirken oder sich wiederholen.
+
+Ein weiteres Problem besteht darin, dass KI-generierte Texte zwar grammatikalisch korrekt sein können, aber trotzdem nicht immer sprachlich überzeugend sind. Manche Texte verwenden unnötig komplizierte Formulierungen oder wiederholen bereits genannte Informationen. Deshalb reicht es nicht aus, lediglich die Anzahl der Grammatikfehler zu betrachten.
