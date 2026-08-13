@@ -23,6 +23,7 @@ class TextAnalyzer:
         issues = self.language_tool.analyze(text)
 
         result = {
+            "text": text,
             "linguistic": linguistic_result,
             "language_issues": [
                 self._issue_to_dict(issue)

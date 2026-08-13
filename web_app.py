@@ -115,14 +115,15 @@ def display_results(result: dict) -> None:
 
     st.subheader("Quality Profile")
 
-    columns = st.columns(5)
+    columns = st.columns(6)
 
     dimension_data = [
         ("Grammar", dimensions["grammar"]),
-        ("Vocabulary", dimensions["lexical"]),
-        ("Sentence Quality", dimensions["syntax"]),
+        ("Vocabulary", dimensions["vocabulary"]),
+        ("Sentence Quality", dimensions["sentence_quality"]),
         ("Readability", dimensions["readability"]),
-        ("Cleanliness", dimensions["cleanliness"]),
+        ("Redundancy", dimensions["redundancy"]),
+        ("Text Quality", dimensions["text_quality"]),
     ]
 
     for column, (name, value) in zip(
@@ -148,42 +149,28 @@ def display_results(result: dict) -> None:
     weaknesses = []
 
     if dimensions["grammar"] < 70:
-        weaknesses.append(
-            "Grammar and spelling"
-        )
+        weaknesses.append("Grammar & spelling")
 
-    if dimensions["lexical"] < 70:
-        weaknesses.append(
-            "Vocabulary"
-        )
+    if dimensions["vocabulary"] < 70:
+        weaknesses.append("Vocabulary")
 
-    if dimensions["syntax"] < 70:
-        weaknesses.append(
-            "Sentence structure"
-        )
+    if dimensions["sentence_quality"] < 70:
+        weaknesses.append("Sentence quality")
 
     if dimensions["readability"] < 70:
-        weaknesses.append(
-            "Readability"
-        )
+        weaknesses.append("Readability")
 
-    if dimensions["cleanliness"] < 70:
-        weaknesses.append(
-            "Text cleanliness"
-        )
+    if dimensions["text_quality"] < 70:
+        weaknesses.append("Text quality")
 
     if weaknesses:
-
         st.warning(
             "**Main weaknesses:** "
             + ", ".join(weaknesses)
         )
-
     else:
-
         st.success(
-            "No major weaknesses detected "
-            "by the current evaluation model."
+            "No major weaknesses detected."
         )
 
     # =========================================================
@@ -191,6 +178,64 @@ def display_results(result: dict) -> None:
     # =========================================================
 
     with st.expander("Detailed analysis"):
+
+        # -----------------------------------------------------
+        # Scoring diagnostics
+        # -----------------------------------------------------
+
+        st.markdown("### Scoring Diagnostics")
+
+        details = score["details"]
+
+        debug_data = {
+            "LanguageTool issues":
+                details["language_issues"],
+
+            "Words":
+                details["words"],
+
+            "Lexical diversity":
+                details["lexical_diversity"],
+
+            "Lexical density":
+                details["lexical_density"],
+
+            "Average sentence length":
+                details["avg_sentence_length"],
+
+            "Sentence length variation":
+                details["sentence_length_std"],
+
+            "Flesch Reading Ease":
+                details["flesch_reading_ease"],
+
+            "Text quality passed":
+                details["quality_passed"],
+        }
+
+        st.json(debug_data)
+
+        st.markdown("#### Dimension calculations")
+
+        dimension_debug = {
+            "Grammar":
+                details["grammar_score"],
+
+            "Vocabulary":
+                details["vocabulary_score"],
+
+            "Sentence quality":
+                details["sentence_score"],
+
+            "Readability":
+                details["readability_score"],
+
+            "Text quality":
+                details["text_quality_score"],
+        }
+
+        st.json(dimension_debug)
+
 
         # -----------------------------------------------------
         # Basic statistics
