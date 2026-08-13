@@ -4,32 +4,60 @@ from collections import Counter
 from typing import Any
 
 import spacy
+import textdescriptives
 
 
 class LinguisticAnalyzer:
-    """
-    Extracts basic linguistic statistics from German text.
-    """
 
-    def __init__(self, model: str = "de_core_news_lg") -> None:
+    def __init__(
+        self,
+        model: str = "de_core_news_lg",
+    ) -> None:
+
         self.nlp = spacy.load(model)
 
-    def analyze(self, text: str) -> dict[str, Any]:
+        self.nlp.add_pipe(
+            "textdescriptives/all",
+        )
+
+    def analyze(
+        self,
+        text: str,
+    ) -> dict[str, Any]:
+
         doc = self.nlp(text)
 
-        sentences = list(doc.sents)
+        return {
+            "textdescriptives": {
+                "descriptive_stats": doc._.descriptive_stats,
+                "readability": doc._.readability,
+                "dependency_distance": doc._.dependency_distance,
+                "pos_proportions": doc._.pos_proportions,
+                "quality": doc._.quality,
+            },
+
+            "custom": self._custom_metrics(doc),
+        }
+
+    def _custom_metrics(
+        self,
+        doc,
+    ) -> dict[str, Any]:
+
+        tokens = [
+            token
+            for token in doc
+            if not token.is_space
+            and not token.is_punct
+        ]
 
         words = [
             token
-            for token in doc
-            if not token.is_space and not token.is_punct
-        ]
-
-        alphabetic_words = [
-            token
-            for token in words
+            for token in tokens
             if token.is_alpha
         ]
+
+        sentences = list(doc.sents)
 
         sentence_lengths = [
             sum(
@@ -43,12 +71,12 @@ class LinguisticAnalyzer:
 
         word_lengths = [
             len(token.text)
-            for token in alphabetic_words
+            for token in words
         ]
 
         lemmas = [
             token.lemma_.lower()
-            for token in alphabetic_words
+            for token in words
             if token.lemma_
         ]
 
@@ -56,22 +84,23 @@ class LinguisticAnalyzer:
 
         pos_counts = Counter(
             token.pos_
-            for token in words
+            for token in tokens
         )
 
         dependency_depths = [
             self._dependency_depth(token)
-            for token in words
+            for token in tokens
         ]
 
         return {
-            "characters": len(text),
-            "tokens": len(words),
-            "words": len(alphabetic_words),
+            "characters": len(doc.text),
+            "tokens": len(tokens),
+            "words": len(words),
             "sentences": len(sentences),
 
             "avg_sentence_length": (
-                sum(sentence_lengths) / len(sentence_lengths)
+                sum(sentence_lengths)
+                / len(sentence_lengths)
                 if sentence_lengths
                 else 0.0
             ),
@@ -88,8 +117,15 @@ class LinguisticAnalyzer:
                 else 0
             ),
 
+            "sentence_length_std": (
+                self._standard_deviation(sentence_lengths)
+                if sentence_lengths
+                else 0.0
+            ),
+
             "avg_word_length": (
-                sum(word_lengths) / len(word_lengths)
+                sum(word_lengths)
+                / len(word_lengths)
                 if word_lengths
                 else 0.0
             ),
@@ -97,17 +133,19 @@ class LinguisticAnalyzer:
             "unique_lemmas": len(unique_lemmas),
 
             "lemma_type_token_ratio": (
-                len(unique_lemmas) / len(lemmas)
+                len(unique_lemmas)
+                / len(lemmas)
                 if lemmas
                 else 0.0
             ),
 
             "lexical_density": (
-                self._lexical_density(doc)
+                self._lexical_density(tokens)
             ),
 
             "avg_dependency_depth": (
-                sum(dependency_depths) / len(dependency_depths)
+                sum(dependency_depths)
+                / len(dependency_depths)
                 if dependency_depths
                 else 0.0
             ),
@@ -116,20 +154,7 @@ class LinguisticAnalyzer:
         }
 
     @staticmethod
-    def _lexical_density(doc) -> float:
-        """
-        Approximation of lexical density.
-
-        Content words:
-        NOUN, VERB, ADJ, ADV, PROPN
-        """
-
-        tokens = [
-            token
-            for token in doc
-            if not token.is_space
-            and not token.is_punct
-        ]
+    def _lexical_density(tokens) -> float:
 
         if not tokens:
             return 0.0
@@ -150,6 +175,7 @@ class LinguisticAnalyzer:
 
     @staticmethod
     def _dependency_depth(token) -> int:
+
         depth = 0
         current = token
 
@@ -158,3 +184,20 @@ class LinguisticAnalyzer:
             current = current.head
 
         return depth
+
+    @staticmethod
+    def _standard_deviation(
+        values: list[float],
+    ) -> float:
+
+        if len(values) < 2:
+            return 0.0
+
+        mean = sum(values) / len(values)
+
+        variance = sum(
+            (value - mean) ** 2
+            for value in values
+        ) / len(values)
+
+        return variance ** 0.5

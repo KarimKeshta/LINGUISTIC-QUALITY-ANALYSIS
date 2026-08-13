@@ -12,18 +12,18 @@ st.set_page_config(
 )
 
 
-@st.cache_resource
+#@st.cache_resource
 def get_analyzer() -> TextAnalyzer:
     return TextAnalyzer()
 
 
 def main() -> None:
-    st.title("Linguistic Quality Analyzer")
+    st.title("Linguistic Quality")
 
     st.markdown(
         """
-        Analyze the linguistic characteristics of a text using
-        grammar checking, NLP and statistical linguistic measures.
+        Evaluate the linguistic quality of a text using
+        automated linguistic analysis.
         """
     )
 
@@ -64,126 +64,258 @@ def main() -> None:
 
 
 def display_results(result: dict) -> None:
-    metrics = result["metrics"]
+
+    score = result["score"]
+
+    linguistic = result["linguistic"]
+    custom = linguistic["custom"]
+
     issues = result["language_issues"]
+
+    dimensions = score["dimensions"]
+
+    # =========================================================
+    # Overall Score
+    # =========================================================
 
     st.divider()
 
-    st.header("Analysis")
+    st.subheader("Linguistic Quality")
 
-    # ---------------------------------------------------------
-    # Basic statistics
-    # ---------------------------------------------------------
+    overall = score["overall"]
 
-    st.subheader("Text Statistics")
-
-    columns = st.columns(4)
-
-    columns[0].metric(
-        "Words",
-        metrics["words"],
-    )
-
-    columns[1].metric(
-        "Sentences",
-        metrics["sentences"],
-    )
-
-    columns[2].metric(
-        "Avg. sentence length",
-        f"{metrics['avg_sentence_length']:.1f}",
-    )
-
-    columns[3].metric(
-        "Avg. word length",
-        f"{metrics['avg_word_length']:.1f}",
-    )
-
-    # ---------------------------------------------------------
-    # Lexical characteristics
-    # ---------------------------------------------------------
-
-    st.subheader("Lexical Characteristics")
-
-    columns = st.columns(3)
-
-    columns[0].metric(
-        "Unique lemmas",
-        metrics["unique_lemmas"],
-    )
-
-    columns[1].metric(
-        "Lemma TTR",
-        f"{metrics['lemma_type_token_ratio']:.3f}",
-    )
-
-    columns[2].metric(
-        "Lexical density",
-        f"{metrics['lexical_density']:.3f}",
-    )
-
-    # ---------------------------------------------------------
-    # Syntax
-    # ---------------------------------------------------------
-
-    st.subheader("Syntactic Characteristics")
-
-    columns = st.columns(3)
-
-    columns[0].metric(
-        "Dependency depth",
-        f"{metrics['avg_dependency_depth']:.2f}",
-    )
-
-    columns[1].metric(
-        "Shortest sentence",
-        metrics["min_sentence_length"],
-    )
-
-    columns[2].metric(
-        "Longest sentence",
-        metrics["max_sentence_length"],
-    )
-
-    # ---------------------------------------------------------
-    # LanguageTool
-    # ---------------------------------------------------------
-
-    st.subheader("Language Issues")
-
-    if not issues:
-        st.success(
-            "LanguageTool did not detect any issues."
-        )
+    if overall >= 85:
+        interpretation = "Very good"
+    elif overall >= 70:
+        interpretation = "Good"
+    elif overall >= 55:
+        interpretation = "Acceptable"
+    elif overall >= 40:
+        interpretation = "Weak"
     else:
-        st.warning(
-            f"{len(issues)} potential issue(s) detected."
+        interpretation = "Poor"
+
+    # Center the score
+    left, center, right = st.columns([1, 2, 1])
+
+    with center:
+        st.metric(
+            "Overall Score",
+            f"{overall:.1f} / 100",
+            interpretation,
         )
 
-        for index, issue in enumerate(
-            issues,
-            start=1,
-        ):
-            with st.expander(
-                f"{index}. {issue['message']}"
+        st.progress(
+            overall / 100
+        )
+
+    # =========================================================
+    # Quality dimensions
+    # =========================================================
+
+    st.subheader("Quality Profile")
+
+    columns = st.columns(5)
+
+    dimension_data = [
+        ("Grammar", dimensions["grammar"]),
+        ("Vocabulary", dimensions["lexical"]),
+        ("Sentence Quality", dimensions["syntax"]),
+        ("Readability", dimensions["readability"]),
+        ("Cleanliness", dimensions["cleanliness"]),
+    ]
+
+    for column, (name, value) in zip(
+        columns,
+        dimension_data,
+    ):
+        with column:
+            st.metric(
+                name,
+                f"{value:.0f}",
+            )
+
+            st.progress(
+                value / 100
+            )
+
+    # =========================================================
+    # Main weaknesses
+    # =========================================================
+
+    st.subheader("Assessment")
+
+    weaknesses = []
+
+    if dimensions["grammar"] < 70:
+        weaknesses.append(
+            "Grammar and spelling"
+        )
+
+    if dimensions["lexical"] < 70:
+        weaknesses.append(
+            "Vocabulary"
+        )
+
+    if dimensions["syntax"] < 70:
+        weaknesses.append(
+            "Sentence structure"
+        )
+
+    if dimensions["readability"] < 70:
+        weaknesses.append(
+            "Readability"
+        )
+
+    if dimensions["cleanliness"] < 70:
+        weaknesses.append(
+            "Text cleanliness"
+        )
+
+    if weaknesses:
+
+        st.warning(
+            "**Main weaknesses:** "
+            + ", ".join(weaknesses)
+        )
+
+    else:
+
+        st.success(
+            "No major weaknesses detected "
+            "by the current evaluation model."
+        )
+
+    # =========================================================
+    # Detailed analysis
+    # =========================================================
+
+    with st.expander("Detailed analysis"):
+
+        # -----------------------------------------------------
+        # Basic statistics
+        # -----------------------------------------------------
+
+        st.markdown("### Text Statistics")
+
+        columns = st.columns(4)
+
+        columns[0].metric(
+            "Words",
+            custom["words"],
+        )
+
+        columns[1].metric(
+            "Sentences",
+            custom["sentences"],
+        )
+
+        columns[2].metric(
+            "Avg. sentence length",
+            f"{custom['avg_sentence_length']:.1f}",
+        )
+
+        columns[3].metric(
+            "Avg. word length",
+            f"{custom['avg_word_length']:.1f}",
+        )
+
+        # -----------------------------------------------------
+        # Lexical
+        # -----------------------------------------------------
+
+        st.markdown("### Lexical Characteristics")
+
+        columns = st.columns(3)
+
+        columns[0].metric(
+            "Unique lemmas",
+            custom["unique_lemmas"],
+        )
+
+        columns[1].metric(
+            "Lemma TTR",
+            f"{custom['lemma_type_token_ratio']:.3f}",
+        )
+
+        columns[2].metric(
+            "Lexical density",
+            f"{custom['lexical_density']:.3f}",
+        )
+
+        # -----------------------------------------------------
+        # Sentence structure
+        # -----------------------------------------------------
+
+        st.markdown("### Sentence Structure")
+
+        columns = st.columns(4)
+
+        columns[0].metric(
+            "Average",
+            f"{custom['avg_sentence_length']:.1f}",
+        )
+
+        columns[1].metric(
+            "Shortest",
+            custom["min_sentence_length"],
+        )
+
+        columns[2].metric(
+            "Longest",
+            custom["max_sentence_length"],
+        )
+
+        columns[3].metric(
+            "Variation",
+            f"{custom['sentence_length_std']:.1f}",
+        )
+
+        # -----------------------------------------------------
+        # Language issues
+        # -----------------------------------------------------
+
+        st.markdown("### Language Issues")
+
+        if not issues:
+
+            st.success(
+                "LanguageTool did not detect any issues."
+            )
+
+        else:
+
+            st.warning(
+                f"{len(issues)} potential issue(s) detected."
+            )
+
+            for index, issue in enumerate(
+                issues,
+                start=1,
             ):
-                st.write(
-                    f"**Category:** "
-                    f"{issue['category']}"
-                )
 
-                st.write(
-                    f"**Rule:** "
-                    f"`{issue['rule_id']}`"
-                )
+                with st.expander(
+                    f"{index}. {issue['message']}"
+                ):
 
-                if issue["replacements"]:
                     st.write(
-                        "**Suggestions:** "
-                        + ", ".join(
-                            issue["replacements"][:5]
-                        )
+                        f"**Category:** "
+                        f"{issue['category']}"
                     )
+
+                    st.write(
+                        f"**Rule:** "
+                        f"`{issue['rule_id']}`"
+                    )
+
+                    if issue["replacements"]:
+
+                        st.write(
+                            "**Suggestions:** "
+                            + ", ".join(
+                                issue["replacements"][:5]
+                            )
+                        )
 
 
 if __name__ == "__main__":
