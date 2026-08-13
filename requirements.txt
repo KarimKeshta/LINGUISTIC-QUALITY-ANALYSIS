@@ -1,3 +1,4 @@
 spacy==3.8.11
 textdescriptives
 language-tool-python==3.4.0
+streamlit
