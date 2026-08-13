@@ -115,7 +115,7 @@ def display_results(result: dict) -> None:
 
     st.subheader("Quality Profile")
 
-    columns = st.columns(6)
+    columns = st.columns(5)
 
     dimension_data = [
         ("Grammar", dimensions["grammar"]),
@@ -123,7 +123,6 @@ def display_results(result: dict) -> None:
         ("Sentence Quality", dimensions["sentence_quality"]),
         ("Readability", dimensions["readability"]),
         ("Redundancy", dimensions["redundancy"]),
-        ("Text Quality", dimensions["text_quality"]),
     ]
 
     for column, (name, value) in zip(
@@ -159,9 +158,6 @@ def display_results(result: dict) -> None:
 
     if dimensions["readability"] < 70:
         weaknesses.append("Readability")
-
-    if dimensions["text_quality"] < 70:
-        weaknesses.append("Text quality")
 
     if weaknesses:
         st.warning(
@@ -229,9 +225,6 @@ def display_results(result: dict) -> None:
 
             "Readability":
                 details["readability_score"],
-
-            "Text quality":
-                details["text_quality_score"],
         }
 
         st.json(dimension_debug)

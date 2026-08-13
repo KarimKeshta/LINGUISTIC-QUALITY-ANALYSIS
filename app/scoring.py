@@ -64,17 +64,12 @@ def calculate_score(result: dict[str, Any]) -> dict[str, Any]:
         result["text"]
     )
 
-    text_quality = text_quality_score(
-        textdesc["quality"],
-    )
-
     overall = (
-        grammar * 0.30
-        + vocabulary * 0.15
-        + sentence * 0.15
+        grammar * 0.35
+        + vocabulary * 0.20
+        + sentence * 0.20
         + readability * 0.15
-        + redundancy * 0.15
-        + text_quality * 0.10
+        + redundancy * 0.10
     )
 
     return {
@@ -86,7 +81,6 @@ def calculate_score(result: dict[str, Any]) -> dict[str, Any]:
             "sentence_quality": round(sentence, 1),
             "readability": round(readability, 1),
             "redundancy": round(redundancy, 1),
-            "text_quality": round(text_quality, 1),
         },
 
         "details": {
@@ -110,7 +104,6 @@ def calculate_score(result: dict[str, Any]) -> dict[str, Any]:
             "vocabulary_score": vocabulary,
             "sentence_score": sentence,
             "readability_score": readability,
-            "text_quality_score": text_quality,
         },
     }
 
@@ -240,11 +233,36 @@ def text_quality_score(
     quality: Any,
 ) -> float:
 
-    return 100.0 if getattr(
-        quality,
-        "passed",
-        False,
-    ) else 70.0
+    checks: list[bool] = []
+
+    def collect_checks(value: Any) -> None:
+
+        if hasattr(value, "passed"):
+            checks.append(bool(value.passed))
+            return
+
+        if isinstance(value, dict):
+            for item in value.values():
+                collect_checks(item)
+
+        elif isinstance(value, (list, tuple)):
+            for item in value:
+                collect_checks(item)
+
+        elif hasattr(value, "__dict__"):
+            for item in vars(value).values():
+                collect_checks(item)
+
+    collect_checks(quality)
+
+    if not checks:
+        return 70.0
+
+    return (
+        sum(checks)
+        / len(checks)
+        * 100
+    )
 
 
 def range_score(
