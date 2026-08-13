@@ -109,6 +109,25 @@ def display_results(result: dict) -> None:
             overall / 100
         )
 
+        if overall >= 85:
+            st.success(
+                "The text shows strong overall linguistic quality."
+            )
+        elif overall >= 70:
+            st.success(
+                "The text shows generally good linguistic quality "
+                "with some areas for improvement."
+            )
+        elif overall >= 55:
+            st.warning(
+                "The text shows acceptable linguistic quality, "
+                "but several areas could be improved."
+            )
+        else:
+            st.error(
+                "The text shows significant linguistic weaknesses."
+            )
+
     # =========================================================
     # Quality dimensions
     # =========================================================
@@ -159,6 +178,9 @@ def display_results(result: dict) -> None:
     if dimensions["readability"] < 70:
         weaknesses.append("Readability")
 
+    if dimensions["redundancy"] < 70:
+        weaknesses.append("Redundancy")
+
     if weaknesses:
         st.warning(
             "**Main weaknesses:** "
@@ -174,62 +196,6 @@ def display_results(result: dict) -> None:
     # =========================================================
 
     with st.expander("Detailed analysis"):
-
-        # -----------------------------------------------------
-        # Scoring diagnostics
-        # -----------------------------------------------------
-
-        st.markdown("### Scoring Diagnostics")
-
-        details = score["details"]
-
-        debug_data = {
-            "LanguageTool issues":
-                details["language_issues"],
-
-            "Words":
-                details["words"],
-
-            "Lexical diversity":
-                details["lexical_diversity"],
-
-            "Lexical density":
-                details["lexical_density"],
-
-            "Average sentence length":
-                details["avg_sentence_length"],
-
-            "Sentence length variation":
-                details["sentence_length_std"],
-
-            "Flesch Reading Ease":
-                details["flesch_reading_ease"],
-
-            "Text quality passed":
-                details["quality_passed"],
-        }
-
-        st.json(debug_data)
-
-        st.markdown("#### Dimension calculations")
-
-        dimension_debug = {
-            "Grammar":
-                details["grammar_score"],
-
-            "Vocabulary":
-                details["vocabulary_score"],
-
-            "Sentence quality":
-                details["sentence_score"],
-
-            "Readability":
-                details["readability_score"],
-        }
-
-        st.json(dimension_debug)
-
-
         # -----------------------------------------------------
         # Basic statistics
         # -----------------------------------------------------
@@ -354,6 +320,65 @@ def display_results(result: dict) -> None:
                                 issue["replacements"][:5]
                             )
                         )
+
+
+    # =========================================================
+    # DEBUG DATA
+    # =========================================================
+    with st.expander("Debug Information"):
+                # -----------------------------------------------------
+        # Scoring diagnostics
+        # -----------------------------------------------------
+
+        st.markdown("### Scoring Diagnostics")
+
+        details = score["details"]
+
+        debug_data = {
+            "LanguageTool issues":
+                details["language_issues"],
+
+            "Words":
+                details["words"],
+
+            "Lexical diversity":
+                details["lexical_diversity"],
+
+            "Lexical density":
+                details["lexical_density"],
+
+            "Average sentence length":
+                details["avg_sentence_length"],
+
+            "Sentence length variation":
+                details["sentence_length_std"],
+
+            "Flesch Reading Ease":
+                details["flesch_reading_ease"],
+
+            "Text quality passed":
+                details["quality_passed"],
+        }
+
+        st.json(debug_data)
+
+        st.markdown("#### Dimension calculations")
+
+        dimension_debug = {
+            "Grammar":
+                details["grammar_score"],
+
+            "Vocabulary":
+                details["vocabulary_score"],
+
+            "Sentence quality":
+                details["sentence_score"],
+
+            "Readability":
+                details["readability_score"],
+        }
+
+        st.json(dimension_debug)
 
 
 if __name__ == "__main__":
